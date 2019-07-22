@@ -33,12 +33,6 @@ class Program:
         self.inputCSVPath.set(askopenfilename())
         print(self.inputCSVPath)
 
-    def setInputTableKeys(self):
-        self.inputTableKeys.set(askopenfilename())
-
-    def setInputHeaderMap(self):
-        self.inputHeaderMap.set(askopenfilename())
-
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
         header_map_path = self.inputHeaderMap.get()
@@ -72,11 +66,6 @@ class Program:
         # buttons + entries
         tk.Button(self.master, text="Select File",
                   command=self.setInputCSVPath).grid(row=0, column=1)
-        tk.Button(self.master, text="Select File",
-                  command=self.setInputHeaderMap).grid(row=1, column=1)
-        tk.Button(self.master, text="Select File",
-                  command=self.setInputTableKeys).grid(row=2, column=1)
-        # tk.Entry(self.master).grid(row=3, column=1)
 
         # path displays
         tk.Label(self.master, textvariable=self.inputCSVPath).grid(
