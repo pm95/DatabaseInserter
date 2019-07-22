@@ -4,94 +4,115 @@
 
 import csv
 import json
+import traceback
 
 # pip install the following if necessary
-import pyodbc
-
-# file and json paths
-fin_path = "./DatabasePullTestPlugin.csv"
-fout_path = "./DatabasePullTestPlugin_NEW.csv"
-header_map_path = "./header_map.json"
-table_keys_path = "./table_keys.json"
-
-# load json objects to memory
-with open(header_map_path, 'r') as fin:
-    modify_headers = json.load(fin)
-
-with open(table_keys_path, 'r') as fin:
-    table_keys = json.load(fin)
+try:
+    import pyodbc
+except:
+    print("MUST INSTALL PYODBC BEFORE CONTINUING")
 
 
-with open(fin_path, 'r') as fin, open(fout_path, 'w', newline='\n') as fout:
-    print("Imported %s" % fin_path)
+class MasterlistDataLoader:
+    def __init__(self, fin_path, header_map_path, table_keys_path, fout_path):
+        self.fin_path = fin_path
+        self.header_map_path = header_map_path
+        self.table_keys_path = table_keys_path
+        self.fout_path = fout_path
 
-    # Read in the CSV file
-    fin = csv.reader(fin, delimiter=',')
+        self.modify_headers = None
+        self.table_keys = None
 
-    # Call writable object to write CSV
-    fout = csv.writer(fout, delimiter=',')
+    def defineModifyHeaders(self):
+        with open(self.header_map_path, 'r') as fin:
+            self.modify_headers = json.load(fin)
 
-    # Extract first row in CSV (headers)
-    col_names = next(fin)
+    def defineTableKeys(self):
+        with open(self.table_keys_path, 'r') as fin:
+            self.table_keys = json.load(fin)
 
-    # Extract the indeces for all columns containing "date" information
-    date_cols = [index for (index, col) in enumerate(
-        col_names) if "Date" in col or "date" in col]
+    def formatCSVForLoad(self):
+        with open(self.fin_path, 'r') as fin, open(self.fout_path, 'w', newline='\n') as fout:
+            print("Imported %s" % self.fin_path)
 
-    # Mofidy headers to make import into DB easier
-    for i in range(len(col_names)):
-        col = col_names[i]
-        if col.lower() in modify_headers:
-            col = modify_headers[col.lower()]
-        else:
-            col = col.lower().replace(" ", "")
-        col_names[i] = col
+            # Read in the CSV file
+            fin = csv.reader(fin, delimiter=',')
 
-    fout.writerow(col_names)
+            # Call writable object to write CSV
+            fout = csv.writer(fout, delimiter=',')
 
-    # Work on rest of data in CSV
-    for row in fin:
-        for index in date_cols:
-            row[index] = row[index].replace("T00:00:00.00Z", "")
-        fout.writerow(row)
+            # Extract first row in CSV (headers)
+            col_names = next(fin)
 
-    print("\nFinished writing CSV to %s" % fout_path)
+            # Extract the indeces for all columns containing "date" information
+            date_cols = [index for (index, col) in enumerate(
+                col_names) if "Date" in col or "date" in col]
 
+            # Mofidy headers to make import into DB easier
+            for i in range(len(col_names)):
+                col = col_names[i]
+                if col.lower() in self.modify_headers:
+                    col = self.modify_headers[col.lower()]
+                else:
+                    col = col.lower().replace(" ", "")
+                col_names[i] = col
 
-# DB Insertion Steps
-with open(fout_path, 'r') as fin:
-    fin = csv.DictReader(fin)
+            fout.writerow(col_names)
 
-    # define keys for each table
-    processes_keys = table_keys["processes"]
+            # Work on rest of data in CSV
+            for row in fin:
+                for index in date_cols:
+                    row[index] = row[index].replace("T00:00:00.00Z", "")
+                fout.writerow(row)
 
-    # open connection to DB
-    connection = pyodbc.connect('Driver={SQL Server};'
-                                'Server=chont55862usb;'
-                                'Database=controltower;'
-                                'UID=uipathadmin;'
-                                'PWD=Sql@2017;'
-                                )
+            print("\nFinished writing CSV to %s" % self.fout_path)
 
-    cursor = connection.cursor()
+    def loadBulkDataToDB(self):
+         # DB Insertion Steps
+        with open(self.fout_path, 'r') as fin:
+            fin = csv.DictReader(fin)
 
-    vals = []
-    keys = None
-    for row in fin:
-        data = {key: row[key]
-                for key in row if key.lower() in processes_keys}
-        keys = list(data.keys())
-        values = list(data.values())
+            # define keys for each table
+            processes_keys = self.table_keys["processes"]
 
-        keys = (", ".join(keys)).lower()
-        vals.append(("('"+"','".join(values)+"'),").lower())
+            # open connection to DB
+            connection = pyodbc.connect(
+                'Driver={SQL Server};'
+                'Server=chont55862usb;'
+                'Database=controltower;'
+                'UID=uipathadmin;'
+                'PWD=Sql@2017;'
+            )
 
-    vals = ''.join(vals)[:-1]
+            cursor = connection.cursor()
 
-    query = "INSERT INTO dbo.Processes (%s) VALUES %s;" % (
-        keys, vals)
+            vals = []
+            keys = None
+            for row in fin:
+                data = {key: row[key]
+                        for key in row if key.lower() in processes_keys}
+                keys = list(data.keys())
+                values = list(data.values())
 
-    print(query)
+                keys = (", ".join(keys)).lower()
+                vals.append(("('"+"','".join(values)+"'),").lower())
 
-    cursor.execute(query)
-    connection.commit()
+            vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
+
+            query = "INSERT INTO dbo.Processes (%s) VALUES %s;" % (
+                keys, vals)
+
+            try:
+                cursor.execute(query)
+                connection.commit()
+                print("DB data load done")
+                return True
+            except Exception:
+                print(traceback.format_exc())
+                return False
+
+    def run(self):
+        self.defineModifyHeaders()
+        self.defineTableKeys()
+        self.formatCSVForLoad()
+        return self.loadBulkDataToDB()
