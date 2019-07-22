@@ -45,21 +45,24 @@ class Program:
         table_keys_path = self.inputTableKeys.get()
         fout_path = self.outputCSVPath.get()
 
-        dataLoader = MasterlistDataHandler.MasterlistDataLoader(
-            fin_path, header_map_path, table_keys_path, fout_path)
-
-        loadResult = dataLoader.run()
-
-        if loadResult:
-            messagebox.showinfo(
-                "SUCCESS", "Data loaded successfully to the database")
-            self.master.destroy()
-        else:
+        if fin_path == "No file selected":
             messagebox.showerror(
-                "ERROR", "Data was not loaded to the database.\n\nCheck stacktrace for more info")
+                "NO INPUT FILE SELECTED", "You must select an input CSV file before continuing")
+        else:
+            dataLoader = MasterlistDataHandler.MasterlistDataLoader(
+                fin_path, header_map_path, table_keys_path, fout_path)
+
+            loadResult = dataLoader.run()
+
+            if loadResult == True:
+                messagebox.showinfo(
+                    "SUCCESS", "Data loaded successfully to the database")
+                self.master.destroy()
+            else:
+                messagebox.showerror(
+                    "ERROR", loadResult)
 
     def deployGUI(self):
-
         # labels
         tk.Label(self.master, text="Input CSV File").grid(row=0, column=0)
         tk.Label(self.master, text="Header Mapping JSON").grid(row=1, column=0)
@@ -86,8 +89,11 @@ class Program:
             row=3, column=2)
 
         # submit button
-        tk.Button(self.master, text="Submit",
-                  command=self.handleSubmit).grid(row=4, column=0)
+        tk.Button(
+            self.master,
+            text="Submit",
+            command=self.handleSubmit
+        ).grid(row=4, column=0)
 
         self.master.mainloop()
 
@@ -95,5 +101,5 @@ class Program:
 Program(
     "Masterlist Data Loader",
     "800x450",
-    "./DatabaseDataOut.csv"
+    "../Spreadsheets/DatabaseDataOut.csv"
 ).deployGUI()

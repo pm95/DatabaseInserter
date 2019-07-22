@@ -109,7 +109,7 @@ class MasterlistDataLoader:
                 return True
             except Exception:
                 print(traceback.format_exc())
-                return False
+                return traceback.format_exc()
 
     def run(self):
         self.defineModifyHeaders()
