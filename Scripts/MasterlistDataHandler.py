@@ -69,20 +69,19 @@ class MasterlistDataLoader:
 
     def loadBulkDataToDB(self):
          # DB Insertion Steps
-        with open(self.fout_path, 'r') as fin:
+        with open(self.fout_path, 'r') as fin, open("./db_credentials.json", 'r') as jin:
             fin = csv.DictReader(fin)
 
             # define keys for each table
             processes_keys = self.table_keys["processes"]
 
+            # read credentials json
+            creds = json.load(jin)
+            connectionString = 'Driver={SQL Server};Server=%s;Database=%s;UID=%s;PWD=%s;' % (
+                creds['Server'], creds['Database'], creds['UID'], creds['PWD'])
+
             # open connection to DB
-            connection = pyodbc.connect(
-                'Driver={SQL Server};'
-                'Server=chont55862usb;'
-                'Database=controltower;'
-                'UID=uipathadmin;'
-                'PWD=Sql@2017;'
-            )
+            connection = pyodbc.connect(connectionString)
 
             cursor = connection.cursor()
 
