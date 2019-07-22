@@ -50,11 +50,11 @@ class Program:
 
         loadResult = dataLoader.run()
 
-        if loadResult == True:
+        if loadResult:
             messagebox.showinfo(
                 "SUCCESS", "Data loaded successfully to the database")
             self.master.destroy()
-        elif loadResult == False:
+        else:
             messagebox.showerror(
                 "ERROR", "Data was not loaded to the database.\n\nCheck stacktrace for more info")
 
