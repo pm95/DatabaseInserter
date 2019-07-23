@@ -104,8 +104,8 @@ class Program:
 Program(
     "Masterlist Data Loader",
     "800x450",
-    "../Spreadsheets/DatabaseDataOut.csv",
-    "./Config/headerMap.json",
-    "./Config/tableKeys.json",
-    "./Config/dbCredentials.json"
+    "../data/DatabaseDataOut.csv",
+    "./config/headerMap.json",
+    "./config/tables.json",
+    "./config/dbCredentials.json"
 ).deployGUI()

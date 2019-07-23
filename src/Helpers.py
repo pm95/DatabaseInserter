@@ -26,7 +26,9 @@ def writeJson(obj, jsonPath):
 def queryTableColNames(connection, tableName):
     query = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'%s';" % tableName
     cursor = connection.cursor().execute(query)
-    return [row[0] for row in cursor]
+
+    # remember to change this back to generic
+    return [row[0].lower() for row in cursor if row[0].lower() != "sox"]
 
 
 def logIntoDatabase(credentials):
@@ -49,6 +51,8 @@ def queryInsert(connection, obj, tableName, tableKeys):
         vals.append(("('"+"','".join(values)+"'),").lower())
 
     vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
+
+    print(vals)
 
     query = "INSERT INTO %s (%s) VALUES %s;" % (tableName,
                                                 keys, vals)
