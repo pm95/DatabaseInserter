@@ -46,5 +46,11 @@ class MasterlistDataLoader:
     def run(self):
         self.defineModifyHeaders()
         self.defineTableKeys()
+
+        # processes table
         self.formatCSVForLoad(columnMappings=self.columnMappings["processes"])
-        return self.loadBulkDataToDB(tableName="processes")
+        self.loadBulkDataToDB(tableName="processes")
+
+        # requests table
+        self.formatCSVForLoad(columnMappings=self.columnMappings["requests"])
+        self.loadBulkDataToDB(tableName="requests")

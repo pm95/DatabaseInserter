@@ -70,7 +70,8 @@ class Program:
         # labels
         tk.Label(self.master, text="Input CSV File").grid(row=0, column=0)
         tk.Label(self.master, text="Output File Path").grid(row=1, column=0)
-        tk.Label(self.master, text="Header Mapping JSON").grid(row=2, column=0)
+        tk.Label(self.master, text="Columns Mapping JSON").grid(
+            row=2, column=0)
         tk.Label(self.master, text="Table Keys JSON").grid(row=3, column=0)
         tk.Label(self.master, text="Database Credentials JSON").grid(
             row=4, column=0)
