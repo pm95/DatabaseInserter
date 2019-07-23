@@ -5,12 +5,17 @@
 import csv
 import json
 import traceback
+import urllib.parse
 
 # pip install the following if necessary
 try:
     import pyodbc
 except:
     print("MUST INSTALL PYODBC BEFORE CONTINUING")
+try:
+    import sqlalchemy as db
+except:
+    print("MUST INSTALL SQL ALCHEMY BEFORE CONTINUING")
 
 
 # file I/O
@@ -22,80 +27,6 @@ def readJson(jsonPath):
 def writeJson(obj, jsonPath):
     with open(jsonPath, 'w') as jout:
         json.dump(obj, jout)
-
-
-# DB misc
-def logIntoDatabase(credentials):
-    connectionString = 'Driver={SQL Server};Server=%s;Database=%s;UID=%s;PWD=%s;' % (
-        credentials['Server'], credentials['Database'], credentials['UID'], credentials['PWD'])
-    connection = pyodbc.connect(connectionString)
-    return connection
-
-
-# Data load
-def loadCSVDataToDB(fin_path, tableName, table_keys, dbCredentialsPath):
-    with open(fin_path, 'r') as fin:
-        fin = csv.DictReader(fin)
-
-        # define keys for each table
-        keys = table_keys[tableName]
-
-        # read credentials json
-        creds = readJson(dbCredentialsPath)
-        connection = logIntoDatabase(creds)
-
-        status = False
-        try:
-            # generate insertion queries
-            queryInsert(connection, fin, tableName, keys)
-            print("DB data load done")
-            status = True
-        except Exception:
-            print(traceback.format_exc())
-            return traceback.format_exc()
-        print(status)
-        # send confirmation flag to GUI when done
-        return status
-
-
-# Queries
-def queryTableColNames(connection, tableName):
-    query = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'%s';" % tableName
-    cursor = connection.cursor().execute(query)
-    return [row[0].lower() for row in cursor]
-
-
-def queryInsert(connection, obj, tableName, tableKeys):
-    vals = []
-    keys = None
-    for row in obj:
-        data = {key: row[key]
-                for key in row if key.lower() in tableKeys}
-        keys = list(data.keys())
-        values = list(data.values())
-
-        keys = (", ".join(keys)).lower()
-        vals.append(("('"+"','".join(values)+"'),").lower())
-
-    vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
-
-    query = "INSERT INTO %s (%s) VALUES %s;" % (tableName,
-                                                keys, vals)
-
-    print(query)
-
-    connection.cursor().execute(query)
-    connection.commit()
-
-
-def queryInsertWithSelect(connection, obj, tableName, tableKeys):
-    pass
-
-
-def queryDeleteRowsConditional(connection, tableName, condition):
-    query = "DELETE FROM %s WHERE (%s);" % (tableName, condition)
-    connection.cursor().execute(query)
-    connection.commit()
 
 
 # Data prep
@@ -137,3 +68,93 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
             fout.writerow(row)
 
         print("\nFinished writing CSV to %s" % fout_path)
+
+
+# ORM-based functions
+def testORM():
+    # dialect+driver://username:password@host:port/db?driver=SQL+Server
+    creds = readJson("./config/dbCredentials.json")
+
+    connectionString = 'mssql+pyodbc://%s:%s@%s/%s?driver=SQL+Server' % (
+        creds['UID'], urllib.parse.quote_plus(creds['PWD']), creds['Server'], creds['Database'])
+
+    engine = db.create_engine(connectionString)
+    connection = engine.connect()
+
+
+testORM()
+
+# Data load
+
+
+def loadCSVDataToDB(fin_path, tableName, table_keys, dbCredentialsPath):
+    with open(fin_path, 'r') as fin:
+        fin = csv.DictReader(fin)
+
+        # define keys for each table
+        keys = table_keys[tableName]
+
+        # read credentials json
+        creds = readJson(dbCredentialsPath)
+        connection = logIntoDatabase(creds)
+
+        status = False
+        try:
+            # generate insertion queries
+            queryInsert(connection, fin, tableName, keys)
+            print("DB data load done")
+            status = True
+        except Exception:
+            print(traceback.format_exc())
+            return traceback.format_exc()
+        print(status)
+        # send confirmation flag to GUI when done
+        return status
+
+
+# DB misc
+def logIntoDatabase(credentials):
+    connectionString = 'Driver={SQL Server};Server=%s;Database=%s;UID=%s;PWD=%s;' % (
+        credentials['Server'], credentials['Database'], credentials['UID'], credentials['PWD'])
+    connection = pyodbc.connect(connectionString)
+    return connection
+
+
+# Queries
+def queryTableColNames(connection, tableName):
+    query = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'%s';" % tableName
+    cursor = connection.cursor().execute(query)
+    return [row[0].lower() for row in cursor]
+
+
+def queryInsert(connection, obj, tableName, tableKeys):
+    vals = []
+    keys = None
+    for row in obj:
+        data = {key: row[key]
+                for key in row if key.lower() in tableKeys}
+        keys = list(data.keys())
+        values = list(data.values())
+
+        keys = (", ".join(keys)).lower()
+        vals.append(("('"+"','".join(values)+"'),").lower())
+
+    vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
+
+    query = "INSERT INTO %s (%s) VALUES %s;" % (tableName,
+                                                keys, vals)
+
+    print(query)
+
+    connection.cursor().execute(query)
+    connection.commit()
+
+
+def queryInsertWithFK(destTable, destCols, destVals, fkTable, fkCol, fk):
+    pass
+
+
+def queryDeleteRowsConditional(connection, tableName, condition):
+    query = "DELETE FROM %s WHERE (%s);" % (tableName, condition)
+    connection.cursor().execute(query)
+    connection.commit()
