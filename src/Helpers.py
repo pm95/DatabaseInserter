@@ -80,6 +80,17 @@ def testORM():
 
     engine = db.create_engine(connectionString)
     connection = engine.connect()
+    metadata = db.MetaData()
+
+    processes = db.Table('processes', metadata,
+                         autoload=True, autoload_with=engine)
+
+    # equivalent to SELECT * FROM <table name>
+    query = db.select([processes])
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchall()
+
+    print(ResultSet[:3])
 
 
 testORM()
