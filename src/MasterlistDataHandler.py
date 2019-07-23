@@ -47,10 +47,7 @@ class MasterlistDataLoader:
         self.defineModifyHeaders()
         self.defineTableKeys()
 
-        # processes table
-        self.formatCSVForLoad(columnMappings=self.columnMappings["processes"])
-        self.loadBulkDataToDB(tableName="processes")
-
-        # requests table
-        self.formatCSVForLoad(columnMappings=self.columnMappings["requests"])
-        self.loadBulkDataToDB(tableName="requests")
+        # tables insertions
+        table = "processes"
+        self.formatCSVForLoad(columnMappings=self.columnMappings[table])
+        return self.loadBulkDataToDB(tableName=table)

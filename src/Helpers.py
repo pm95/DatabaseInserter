@@ -81,8 +81,15 @@ def queryInsert(connection, obj, tableName, tableKeys):
 
     query = "INSERT INTO %s (%s) VALUES %s;" % (tableName,
                                                 keys, vals)
+
+    print(query)
+
     connection.cursor().execute(query)
     connection.commit()
+
+
+def queryInsertWithSelect(connection, obj, tableName, tableKeys):
+    pass
 
 
 def queryDeleteRowsConditional(connection, tableName, condition):

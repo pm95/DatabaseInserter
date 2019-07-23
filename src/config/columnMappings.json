@@ -25,5 +25,17 @@
     "business approval": "businessapprovalapproved",
     "business approval by": "businessapprovalapprovedby",
     "number of transactions per frequency (estimate)": "esttransactionfrequency"
+  },
+  "requests": {
+    "request id": "requestid",
+    "process id": "processid",
+
+    "service type": "servicetype",
+    "date created": "createdat",
+    "last updated": "updatedat",
+
+    "process owner": "request user",
+
+    "overall status code": "overallstatuscode"
   }
 }
