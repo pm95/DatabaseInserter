@@ -6,6 +6,8 @@ import csv
 import json
 import traceback
 
+import Helpers
+
 # pip install the following if necessary
 try:
     import pyodbc
@@ -14,7 +16,7 @@ except:
 
 
 class MasterlistDataLoader:
-    def __init__(self, fin_path, header_map_path, table_keys_path, fout_path):
+    def __init__(self, fin_path, fout_path, header_map_path, table_keys_path, dbCredentialsPath):
         self.fin_path = fin_path
         self.header_map_path = header_map_path
         self.table_keys_path = table_keys_path
@@ -23,95 +25,49 @@ class MasterlistDataLoader:
         self.modify_headers = None
         self.table_keys = None
 
+        self.dbCredentialsPath = dbCredentialsPath
+
     def defineModifyHeaders(self):
-        with open(self.header_map_path, 'r') as fin:
-            self.modify_headers = json.load(fin)
+        self.modify_headers = Helpers.readJson(self.header_map_path)
 
     def defineTableKeys(self):
-        with open(self.table_keys_path, 'r') as fin:
-            self.table_keys = json.load(fin)
+        self.table_keys = Helpers.readJson(self.table_keys_path)
 
     def formatCSVForLoad(self):
-        with open(self.fin_path, 'r') as fin, open(self.fout_path, 'w', newline='\n') as fout:
-            print("Imported %s" % self.fin_path)
+        Helpers.formatCSVForLoad(
+            self.fin_path,
+            self.fout_path,
+            self.modify_headers
+        )
 
-            # Read in the CSV file
-            fin = csv.reader(fin, delimiter=',')
-
-            # Call writable object to write CSV
-            fout = csv.writer(fout, delimiter=',')
-
-            # Extract first row in CSV (headers)
-            col_names = next(fin)
-
-            # Extract the indeces for all columns containing "date" information
-            date_cols = [index for (index, col) in enumerate(
-                col_names) if "Date" in col or "date" in col]
-
-            # Mofidy headers to make import into DB easier
-            for i in range(len(col_names)):
-                col = col_names[i]
-                if col.lower() in self.modify_headers:
-                    col = self.modify_headers[col.lower()]
-                else:
-                    col = col.lower().replace(" ", "")
-                col_names[i] = col
-
-            fout.writerow(col_names)
-
-            # Work on rest of data in CSV
-            for row in fin:
-                for index in date_cols:
-                    row[index] = row[index].replace("T00:00:00.00Z", "")
-                fout.writerow(row)
-
-            print("\nFinished writing CSV to %s" % self.fout_path)
-
-    def loadBulkDataToDB(self):
+    def loadBulkDataToDB(self, tableName):
          # DB Insertion Steps
-        with open(self.fout_path, 'r') as fin, open("./db_credentials.json", 'r') as jin:
+        with open(self.fout_path, 'r') as fin:
             fin = csv.DictReader(fin)
 
             # define keys for each table
-            processes_keys = self.table_keys["processes"]
+            processes_keys = self.table_keys[tableName]
 
             # read credentials json
-            creds = json.load(jin)
-            connectionString = 'Driver={SQL Server};Server=%s;Database=%s;UID=%s;PWD=%s;' % (
-                creds['Server'], creds['Database'], creds['UID'], creds['PWD'])
+            creds = Helpers.readJson(self.dbCredentialsPath)
+            connection = Helpers.logIntoDatabase(creds)
 
-            # open connection to DB
-            connection = pyodbc.connect(connectionString)
-
-            cursor = connection.cursor()
-
-            vals = []
-            keys = None
-            for row in fin:
-                data = {key: row[key]
-                        for key in row if key.lower() in processes_keys}
-                keys = list(data.keys())
-                values = list(data.values())
-
-                keys = (", ".join(keys)).lower()
-                vals.append(("('"+"','".join(values)+"'),").lower())
-
-            vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
-
-            query = "INSERT INTO dbo.Processes (%s) VALUES %s;" % (
-                keys, vals)
-
+            status = False
             try:
-                cursor.execute(query)
-                connection.commit()
+                # generate insertion queries
+                Helpers.queryInsert(
+                    connection, fin, tableName, processes_keys)
                 print("DB data load done")
-                return True
+                status = True
             except Exception:
                 print(traceback.format_exc())
                 return traceback.format_exc()
+
+            # send confirmation flag to GUI when done
+            return status
 
     def run(self):
         self.defineModifyHeaders()
         self.defineTableKeys()
         self.formatCSVForLoad()
-        return self.loadBulkDataToDB()
+        return self.loadBulkDataToDB("processes")

@@ -11,7 +11,7 @@ import MasterlistDataHandler
 
 
 class Program:
-    def __init__(self, title, geometry, defaultOutputPath):
+    def __init__(self, title, geometry, defaultOutputPath, headerMapPath, tableKeysPath, dbCredentialsPath):
 
         self.master = tk.Tk()
         self.master.title(title)
@@ -21,10 +21,14 @@ class Program:
             master=self.master, value="No file selected")
 
         self.inputHeaderMap = tk.StringVar(
-            master=self.master, value="./header_map.json")
+            master=self.master, value=headerMapPath)
 
         self.inputTableKeys = tk.StringVar(
-            master=self.master, value="./table_keys.json")
+            master=self.master, value=tableKeysPath)
+
+        self.dbCredentialsPath = tk.StringVar(
+            master=self.master, value=dbCredentialsPath
+        )
 
         self.outputCSVPath = tk.StringVar(
             master=self.master, value=defaultOutputPath)
@@ -44,7 +48,12 @@ class Program:
                 "NO INPUT FILE SELECTED", "You must select an input CSV file before continuing")
         else:
             dataLoader = MasterlistDataHandler.MasterlistDataLoader(
-                fin_path, header_map_path, table_keys_path, fout_path)
+                fin_path,
+                fout_path,
+                header_map_path,
+                table_keys_path,
+                self.dbCredentialsPath
+            )
 
             loadResult = dataLoader.run()
 
@@ -90,5 +99,8 @@ class Program:
 Program(
     "Masterlist Data Loader",
     "800x450",
-    "../Spreadsheets/DatabaseDataOut.csv"
+    "../Spreadsheets/DatabaseDataOut.csv",
+    "./headerMap.json",
+    "./tableKeys.json",
+    "./dbCredentials.json"
 ).deployGUI()

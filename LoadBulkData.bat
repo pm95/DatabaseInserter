@@ -1,2 +1,3 @@
 echo "Running bulk data loader"
-python ./Scripts/RunGUI.py
+cd Scripts/
+python ./RunGUI.py
