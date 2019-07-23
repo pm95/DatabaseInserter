@@ -5,18 +5,17 @@
 from Helpers import readJson, queryTableColNames, logIntoDatabase, writeJson
 
 # define disk file paths
-tablesJsonPath = "./tables.json"
-dbCredentialsPath = "./dbCredentials.json"
+tablesJsonPath = "./Config/tables.json"
+dbCredentialsPath = "./Config/dbCredentials.json"
 
 tables = readJson(tablesJsonPath)
 loginCreds = readJson(dbCredentialsPath)
 
 connection = logIntoDatabase(loginCreds)
-cursor = connection.cursor()
 
-tables["processes"] = queryTableColNames(cursor, "processes")
-tables["requests"] = queryTableColNames(cursor, "requests")
-tables["users"] = queryTableColNames(cursor, "users")
-tables["statuses"] = queryTableColNames(cursor, "statuses")
+tables["processes"] = queryTableColNames(connection, "processes")
+tables["requests"] = queryTableColNames(connection, "requests")
+tables["users"] = queryTableColNames(connection, "users")
+tables["statuses"] = queryTableColNames(connection, "statuses")
 
 writeJson(tables, tablesJsonPath)

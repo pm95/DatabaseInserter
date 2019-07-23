@@ -91,3 +91,9 @@ def formatCSVForLoad(fin_path, fout_path, modify_headers):
             fout.writerow(row)
 
         print("\nFinished writing CSV to %s" % fout_path)
+
+
+def queryDeleteRowsConditional(connection, tableName, condition):
+    query = "DELETE FROM %s WHERE (%s);" % (tableName, condition)
+    connection.cursor().execute(query)
+    connection.commit()

@@ -42,6 +42,7 @@ class Program:
         header_map_path = self.inputHeaderMap.get()
         table_keys_path = self.inputTableKeys.get()
         fout_path = self.outputCSVPath.get()
+        dbCredentialsPath = self.dbCredentialsPath.get()
 
         if fin_path == "No file selected":
             messagebox.showerror(
@@ -52,7 +53,7 @@ class Program:
                 fout_path,
                 header_map_path,
                 table_keys_path,
-                self.dbCredentialsPath
+                dbCredentialsPath
             )
 
             loadResult = dataLoader.run()
@@ -68,9 +69,11 @@ class Program:
     def deployGUI(self):
         # labels
         tk.Label(self.master, text="Input CSV File").grid(row=0, column=0)
-        tk.Label(self.master, text="Header Mapping JSON").grid(row=1, column=0)
-        tk.Label(self.master, text="Table Keys JSON").grid(row=2, column=0)
-        tk.Label(self.master, text="Output File Path").grid(row=3, column=0)
+        tk.Label(self.master, text="Output File Path").grid(row=1, column=0)
+        tk.Label(self.master, text="Header Mapping JSON").grid(row=2, column=0)
+        tk.Label(self.master, text="Table Keys JSON").grid(row=3, column=0)
+        tk.Label(self.master, text="Database Credentials JSON").grid(
+            row=4, column=0)
 
         # buttons + entries
         tk.Button(self.master, text="Select File",
@@ -79,19 +82,21 @@ class Program:
         # path displays
         tk.Label(self.master, textvariable=self.inputCSVPath).grid(
             row=0, column=2)
-        tk.Label(self.master, textvariable=self.inputHeaderMap).grid(
-            row=1, column=2)
-        tk.Label(self.master, textvariable=self.inputTableKeys).grid(
-            row=2, column=2)
         tk.Label(self.master, textvariable=self.outputCSVPath).grid(
+            row=1, column=2)
+        tk.Label(self.master, textvariable=self.inputHeaderMap).grid(
+            row=2, column=2)
+        tk.Label(self.master, textvariable=self.inputTableKeys).grid(
             row=3, column=2)
+        tk.Label(self.master, textvariable=self.dbCredentialsPath).grid(
+            row=4, column=2)
 
         # submit button
         tk.Button(
             self.master,
             text="Submit",
             command=self.handleSubmit
-        ).grid(row=4, column=0)
+        ).grid(row=5, column=0)
 
         self.master.mainloop()
 
@@ -100,7 +105,7 @@ Program(
     "Masterlist Data Loader",
     "800x450",
     "../Spreadsheets/DatabaseDataOut.csv",
-    "./headerMap.json",
-    "./tableKeys.json",
-    "./dbCredentials.json"
+    "./Config/headerMap.json",
+    "./Config/tableKeys.json",
+    "./Config/dbCredentials.json"
 ).deployGUI()
