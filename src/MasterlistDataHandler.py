@@ -2,17 +2,11 @@
 # Purpose: Manipulate Masterlist data prior to importing it to DB
 # Date: July 17 2019
 
-import csv
-import json
-import traceback
 
 import Helpers
 
-# pip install the following if necessary
-try:
-    import pyodbc
-except:
-    print("MUST INSTALL PYODBC BEFORE CONTINUING")
+# Obtain tables' schemas from DB
+import GetTableSchema
 
 
 class MasterlistDataLoader:
@@ -22,52 +16,35 @@ class MasterlistDataLoader:
         self.table_keys_path = table_keys_path
         self.fout_path = fout_path
 
-        self.modify_headers = None
+        self.columnMappings = None
         self.table_keys = None
 
         self.dbCredentialsPath = dbCredentialsPath
 
     def defineModifyHeaders(self):
-        self.modify_headers = Helpers.readJson(self.header_map_path)
+        self.columnMappings = Helpers.readJson(self.header_map_path)
 
     def defineTableKeys(self):
         self.table_keys = Helpers.readJson(self.table_keys_path)
 
-    def formatCSVForLoad(self):
+    def formatCSVForLoad(self, columnMappings):
         Helpers.formatCSVForLoad(
             self.fin_path,
             self.fout_path,
-            self.modify_headers
+            columnMappings=columnMappings,
+            contains_dates=True
         )
 
     def loadBulkDataToDB(self, tableName):
-         # DB Insertion Steps
-        with open(self.fout_path, 'r') as fin:
-            fin = csv.DictReader(fin)
-
-            # define keys for each table
-            processes_keys = self.table_keys[tableName]
-
-            # read credentials json
-            creds = Helpers.readJson(self.dbCredentialsPath)
-            connection = Helpers.logIntoDatabase(creds)
-
-            status = False
-            try:
-                # generate insertion queries
-                Helpers.queryInsert(
-                    connection, fin, tableName, processes_keys)
-                print("DB data load done")
-                status = True
-            except Exception:
-                print(traceback.format_exc())
-                return traceback.format_exc()
-
-            # send confirmation flag to GUI when done
-            return status
+        return Helpers.loadCSVDataToDB(
+            self.fout_path,
+            tableName,
+            self.table_keys,
+            self.dbCredentialsPath
+        )
 
     def run(self):
         self.defineModifyHeaders()
         self.defineTableKeys()
-        self.formatCSVForLoad()
-        return self.loadBulkDataToDB("processes")
+        self.formatCSVForLoad(columnMappings=self.columnMappings["processes"])
+        return self.loadBulkDataToDB(tableName="processes")

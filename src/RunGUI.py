@@ -11,7 +11,7 @@ import MasterlistDataHandler
 
 
 class Program:
-    def __init__(self, title, geometry, defaultOutputPath, headerMapPath, tableKeysPath, dbCredentialsPath):
+    def __init__(self, title, geometry, defaultOutputPath, columnMapsPath, tableKeysPath, dbCredentialsPath):
 
         self.master = tk.Tk()
         self.master.title(title)
@@ -20,8 +20,8 @@ class Program:
         self.inputCSVPath = tk.StringVar(
             master=self.master, value="No file selected")
 
-        self.inputHeaderMap = tk.StringVar(
-            master=self.master, value=headerMapPath)
+        self.inputColumnsMapsPath = tk.StringVar(
+            master=self.master, value=columnMapsPath)
 
         self.inputTableKeys = tk.StringVar(
             master=self.master, value=tableKeysPath)
@@ -39,7 +39,7 @@ class Program:
 
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
-        header_map_path = self.inputHeaderMap.get()
+        columns_map_path = self.inputColumnsMapsPath.get()
         table_keys_path = self.inputTableKeys.get()
         fout_path = self.outputCSVPath.get()
         dbCredentialsPath = self.dbCredentialsPath.get()
@@ -51,7 +51,7 @@ class Program:
             dataLoader = MasterlistDataHandler.MasterlistDataLoader(
                 fin_path,
                 fout_path,
-                header_map_path,
+                columns_map_path,
                 table_keys_path,
                 dbCredentialsPath
             )
@@ -84,7 +84,7 @@ class Program:
             row=0, column=2)
         tk.Label(self.master, textvariable=self.outputCSVPath).grid(
             row=1, column=2)
-        tk.Label(self.master, textvariable=self.inputHeaderMap).grid(
+        tk.Label(self.master, textvariable=self.inputColumnsMapsPath).grid(
             row=2, column=2)
         tk.Label(self.master, textvariable=self.inputTableKeys).grid(
             row=3, column=2)
@@ -105,7 +105,7 @@ Program(
     "Masterlist Data Loader",
     "800x450",
     "../data/DatabaseDataOut.csv",
-    "./config/headerMap.json",
+    "./config/columnMappings.json",
     "./config/tables.json",
     "./config/dbCredentials.json"
 ).deployGUI()
