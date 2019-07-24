@@ -32,8 +32,6 @@ def writeJson(obj, jsonPath):
 # Data prep
 def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=False):
     with open(fin_path, 'r') as fin, open(fout_path, 'w', newline='\n') as fout:
-        print("Imported %s" % fin_path)
-
         # Read in the CSV file
         fin = csv.reader(fin, delimiter=',')
 
@@ -68,8 +66,6 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
                     row[index] = row[index].replace("T00:00:00.00Z", "")
             fout.writerow(row)
 
-        print("\nFinished writing CSV to %s" % fout_path)
-
 
 def readCSVDictList(fin_path):
     with open(fin_path, 'r') as fin:
@@ -96,7 +92,7 @@ def logIntoDatabase(dbLoginCredsPath):
         return exception
 
 
-def queryInsertORM(tableName, csvDataPath, dbCredentialsPath, fkRelation=None):
+def queryInsertORM(tableName, csvDataPath, dbCredentialsPath):
     engine = logIntoDatabase(dbCredentialsPath)
     connection = engine.connect()
     metadata = db.MetaData()
@@ -112,8 +108,6 @@ def queryInsertORM(tableName, csvDataPath, dbCredentialsPath, fkRelation=None):
 
     try:
         query = db.insert(table)
-        if fkRelation:
-            query = db.insert(table).fkRelation
         connection.execute(query, values_list)
         return True
     except Exception:
@@ -122,15 +116,72 @@ def queryInsertORM(tableName, csvDataPath, dbCredentialsPath, fkRelation=None):
         return exception
 
 
-formatCSVForLoad(
-    "../data/DatabaseTestPlugin.csv",
-    "../data/DatabaseTestHelpersOUT.csv",
-    columnMappings=readJson("./config/columnMappings.json")["processes"],
-    contains_dates=True
-)
+def queryUpdateORM(tableName, colName, newVal, matchCol, matchVal, dbCredentialsPath):
+    engine = logIntoDatabase(dbCredentialsPath)
+    connection = engine.connect()
+    metadata = db.MetaData()
 
-print("Insert query status: %s" % queryInsertORM(
-    tableName='processes',
-    csvDataPath='../data/DatabaseTestHelpersOUT.csv',
-    dbCredentialsPath='./config/dbCredentials.json',
-))
+    table = db.Table(
+        tableName,
+        metadata,
+        autoload=True,
+        autoload_with=engine,
+    )
+
+    query = db.update(table).where(
+        table.columns[matchCol] == matchVal).values({table.columns[colName]: newVal})
+    connection.execute(query)
+
+
+def querySelectWhereORM(tableName, colName, matchCol, matchVal, dbCredentialsPath):
+    engine = logIntoDatabase(dbCredentialsPath)
+    connection = engine.connect()
+    metadata = db.MetaData()
+
+    table = db.Table(
+        tableName,
+        metadata,
+        autoload=True,
+        autoload_with=engine,
+    )
+
+    query = db.select([table.columns[colName]]).where(
+        table.columns[matchCol] == matchVal)
+
+    return connection.execute(query).fetchall()
+
+
+# testing
+tables = list(readJson("./config/tables.json").keys())
+for table in tables:
+    print("Loading data for %s table" % table)
+    formatCSVForLoad(
+        "../data/DatabaseTestPlugin.csv",
+        "../data/DatabaseTestHelpersOUT.csv",
+        columnMappings=readJson("./config/columnMappings.json")[table],
+        contains_dates=True
+    )
+
+    print("Insert query status: %s\n\n" % queryInsertORM(
+        tableName=table,
+        csvDataPath='../data/DatabaseTestHelpersOUT.csv',
+        dbCredentialsPath='./config/dbCredentials.json',
+    ))
+
+# statusCodes = [x[0] for x in querySelectWhereORM(
+#     "statuses",
+#     "statusCode",
+#     "updatedAt",
+#     "2019-05-21",
+#     "./config/dbCredentials.json"
+# )]
+
+# for x in statusCodes:
+#     queryUpdateORM(
+#         tableName="requests",
+#         colName="overallStatusCode",
+#         newVal=x,
+#         matchCol="overallStatusCode",
+#         matchVal=None,
+#         dbCredentialsPath='./config/dbCredentials.json'
+#     )

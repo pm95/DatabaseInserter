@@ -25,5 +25,20 @@
     "business approval": "businessApprovalApproved",
     "business approval by": "businessApprovalApprovedBy",
     "number of transactions per frequency (estimate)": "estTransactionFrequency"
+  },
+  "requests": {
+    "service type": "serviceType",
+    "date created": "createdAt",
+    "last updated": "updatedAt"
+  },
+  "users": {
+    "date created": "createdAt",
+    "last updated": "updatedAt",
+    "requester": "userName"
+  },
+  "statuses": {
+    "date created": "createdAt",
+    "last updated": "updatedAt",
+    "request status": "description"
   }
 }
