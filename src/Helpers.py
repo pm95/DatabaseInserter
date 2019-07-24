@@ -55,7 +55,8 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
                 if col.lower() in columnMappings:
                     col = columnMappings[col.lower()]
                 else:
-                    col = col.lower().replace(" ", "")
+                    col = col.replace(" ", "")
+                    col = col[0].lower() + col[1:]
                 col_names[i] = col
 
         fout.writerow(col_names)
@@ -70,117 +71,66 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
         print("\nFinished writing CSV to %s" % fout_path)
 
 
+def readCSVDictList(fin_path):
+    with open(fin_path, 'r') as fin:
+        return [dict(row) for row in csv.DictReader(fin)]
+
+
 # ORM-based functions
-def testORM():
+def logIntoDatabase(dbLoginCredsPath):
     # dialect+driver://username:password@host:port/db?driver=SQL+Server
-    creds = readJson("./config/dbCredentials.json")
+    dbLoginCreds = readJson("./config/dbCredentials.json")
 
     connectionString = 'mssql+pyodbc://%s:%s@%s/%s?driver=SQL+Server' % (
-        creds['UID'], urllib.parse.quote_plus(creds['PWD']), creds['Server'], creds['Database'])
+        dbLoginCreds['UID'],
+        urllib.parse.quote_plus(dbLoginCreds['PWD']),
+        dbLoginCreds['Server'],
+        dbLoginCreds['Database']
+    )
 
-    engine = db.create_engine(connectionString)
+    try:
+        return db.create_engine(connectionString)
+    except Exception:
+        exception = traceback.format_exc()
+        print(exception)
+        return exception
+
+
+def queryInsertORM(tableName, csvDataPath, dbCredentialsPath, fkRelation=None):
+    engine = logIntoDatabase(dbCredentialsPath)
     connection = engine.connect()
     metadata = db.MetaData()
 
-    processes = db.Table(
-        'processes',
+    table = db.Table(
+        tableName,
         metadata,
         autoload=True,
         autoload_with=engine,
     )
 
-    # Queries
-    query = db.insert(processes)
-    values_list = [
-        {
-            'createdAt': '2019-07-24',
-            'processOwnerName': 'pietro malky',
-            'processNumber': '2510',
-            'updatedAt': '2019-07-24'
-        }
-    ]
-    connection.execute(query, values_list)
+    values_list = readCSVDictList(csvDataPath)
 
-    # query = db.select([processes]).where(
-    #     processes.columns["processNumber"] == '2510')
-    # resultproxy = connection.execute(query)
-    # resultset = resultproxy.fetchall()
-    # print(resultset)
+    try:
+        query = db.insert(table)
+        if fkRelation:
+            query = db.insert(table).fkRelation
+        connection.execute(query, values_list)
+        return True
+    except Exception:
+        exception = traceback.format_exc()
+        print(exception)
+        return exception
 
 
-testORM()
+formatCSVForLoad(
+    "../data/DatabaseTestPlugin.csv",
+    "../data/DatabaseTestHelpersOUT.csv",
+    columnMappings=readJson("./config/columnMappings.json")["processes"],
+    contains_dates=True
+)
 
-# Data load
-
-
-def loadCSVDataToDB(fin_path, tableName, table_keys, dbCredentialsPath):
-    with open(fin_path, 'r') as fin:
-        fin = csv.DictReader(fin)
-
-        # define keys for each table
-        keys = table_keys[tableName]
-
-        # read credentials json
-        creds = readJson(dbCredentialsPath)
-        connection = logIntoDatabase(creds)
-
-        status = False
-        try:
-            # generate insertion queries
-            queryInsert(connection, fin, tableName, keys)
-            print("DB data load done")
-            status = True
-        except Exception:
-            print(traceback.format_exc())
-            return traceback.format_exc()
-        print(status)
-        # send confirmation flag to GUI when done
-        return status
-
-
-# DB misc
-def logIntoDatabase(credentials):
-    connectionString = 'Driver={SQL Server};Server=%s;Database=%s;UID=%s;PWD=%s;' % (
-        credentials['Server'], credentials['Database'], credentials['UID'], credentials['PWD'])
-    connection = pyodbc.connect(connectionString)
-    return connection
-
-
-# Queries
-def queryTableColNames(connection, tableName):
-    query = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'%s';" % tableName
-    cursor = connection.cursor().execute(query)
-    return [row[0] for row in cursor]
-
-
-def queryInsert(connection, obj, tableName, tableKeys):
-    vals = []
-    keys = None
-    for row in obj:
-        data = {key: row[key]
-                for key in row if key.lower() in tableKeys}
-        keys = list(data.keys())
-        values = list(data.values())
-
-        keys = (", ".join(keys)).lower()
-        vals.append(("('"+"','".join(values)+"'),").lower())
-
-    vals = ''.join(vals)[:-1]  # [:-1] removes trailing comma
-
-    query = "INSERT INTO %s (%s) VALUES %s;" % (tableName,
-                                                keys, vals)
-
-    print(query)
-
-    connection.cursor().execute(query)
-    connection.commit()
-
-
-def queryInsertWithFK(destTable, destCols, destVals, fkTable, fkCol, fk):
-    pass
-
-
-def queryDeleteRowsConditional(connection, tableName, condition):
-    query = "DELETE FROM %s WHERE (%s);" % (tableName, condition)
-    connection.cursor().execute(query)
-    connection.commit()
+print("Insert query status: %s" % queryInsertORM(
+    tableName='processes',
+    csvDataPath='../data/DatabaseTestHelpersOUT.csv',
+    dbCredentialsPath='./config/dbCredentials.json',
+))
