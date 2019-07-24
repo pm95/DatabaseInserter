@@ -8,14 +8,10 @@ delete from dbo.Requests where requestUser is null;
 delete from dbo.Users where userId is null;
 delete from dbo.Statuses where updatedAt = '2019-05-21';
 
-update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt='2018-06-15') where dbo.Requests.createdAt = '2018-06-15';
-update dbo.Requests set dbo.Requests.requestUser=(select dbo.Users.id from dbo.Users where dbo.Users.createdAt='2018-06-15') where dbo.Requests.createdAt = '2018-06-15';
-update dbo.Requests set dbo.Requests.overallStatusCode=(select dbo.Statuses.statusCode from dbo.Statuses where dbo.Statuses.createdAt='2018-06-15') where dbo.Requests.createdAt = '2018-06-15';
 
-
-
-INSERT INTO requests 
-(createdat, updatedat, servicetype, processId) VALUES
-('2018-06-15','5/21/2019','coe team discovery', 
-(SELECT dbo.Processes.processId FROM dbo.Processes WHERE dbo.Processes.processNumber='2510')
-);
+-- update values in Requests
+declare @flaggedDate datetimeoffset(7) = '2018-06-15';
+update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
+update dbo.Requests set dbo.Requests.requestUser=(select dbo.Users.id from dbo.Users where dbo.Users.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
+update dbo.Requests set dbo.Requests.overallStatusCode=(select dbo.Statuses.statusCode from dbo.Statuses where dbo.Statuses.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
+select * from dbo.Requests;
