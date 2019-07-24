@@ -152,21 +152,23 @@ def querySelectWhereORM(tableName, colName, matchCol, matchVal, dbCredentialsPat
 
 
 # testing
-tables = list(readJson("./config/tables.json").keys())
-for table in tables:
-    print("Loading data for %s table" % table)
-    formatCSVForLoad(
-        "../data/DatabaseTestPlugin.csv",
-        "../data/DatabaseTestHelpersOUT.csv",
-        columnMappings=readJson("./config/columnMappings.json")[table],
-        contains_dates=True
-    )
+def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPath, columnMappingsPath):
+    tables = list(readJson(tablesPath).keys())
+    for table in tables:
+        print("Loading data for %s table" % table)
+        formatCSVForLoad(
+            csvNoFormatPath,
+            csvFormattedPath,
+            columnMappings=readJson(columnMappingsPath)[table],
+            contains_dates=True
+        )
 
-    print("Insert query status: %s\n\n" % queryInsertORM(
-        tableName=table,
-        csvDataPath='../data/DatabaseTestHelpersOUT.csv',
-        dbCredentialsPath='./config/dbCredentials.json',
-    ))
+        print("Insert query status: %s\n\n" % queryInsertORM(
+            tableName=table,
+            csvDataPath=csvFormattedPath,
+            dbCredentialsPath=dbCredentialsPath,
+        ))
+    return True
 
 # statusCodes = [x[0] for x in querySelectWhereORM(
 #     "statuses",

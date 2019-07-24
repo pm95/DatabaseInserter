@@ -7,12 +7,11 @@ from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 
 
-import MasterlistDataHandler
+import Helpers
 
 
 class Program:
-    def __init__(self, title, geometry, defaultOutputPath, columnMapsPath, tableKeysPath, dbCredentialsPath):
-
+    def __init__(self, title, geometry, defaultOutputPath):
         self.master = tk.Tk()
         self.master.title(title)
         self.master.geometry(geometry)
@@ -21,14 +20,13 @@ class Program:
             master=self.master, value="No file selected")
 
         self.inputColumnsMapsPath = tk.StringVar(
-            master=self.master, value=columnMapsPath)
+            master=self.master, value="No file selected")
 
         self.inputTableKeys = tk.StringVar(
-            master=self.master, value=tableKeysPath)
+            master=self.master, value="No file selected")
 
         self.dbCredentialsPath = tk.StringVar(
-            master=self.master, value=dbCredentialsPath
-        )
+            master=self.master, value="No file selected")
 
         self.outputCSVPath = tk.StringVar(
             master=self.master, value=defaultOutputPath)
@@ -37,6 +35,18 @@ class Program:
         self.inputCSVPath.set(askopenfilename())
         print(self.inputCSVPath)
 
+    def setInputColumnsMapPath(self):
+        self.inputColumnsMapsPath.set(askopenfilename())
+        print(self.inputColumnsMapsPath)
+
+    def setInputTableKeys(self):
+        self.inputTableKeys.set(askopenfilename())
+        print(self.inputTableKeys)
+
+    def setDbCredentialsPath(self):
+        self.dbCredentialsPath.set(askopenfilename())
+        print(self.dbCredentialsPath)
+
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
         columns_map_path = self.inputColumnsMapsPath.get()
@@ -44,19 +54,18 @@ class Program:
         fout_path = self.outputCSVPath.get()
         dbCredentialsPath = self.dbCredentialsPath.get()
 
-        if fin_path == "No file selected":
+        if fin_path == "No file selected" or columns_map_path == "No file selected" or table_keys_path == "No file selected" or dbCredentialsPath == "No file selected":
             messagebox.showerror(
-                "NO INPUT FILE SELECTED", "You must select an input CSV file before continuing")
+                "NOT EVERY INPUT FILE SELECTED", "You must select all input files before continuing")
         else:
-            dataLoader = MasterlistDataHandler.MasterlistDataLoader(
-                fin_path,
-                fout_path,
-                columns_map_path,
-                table_keys_path,
-                dbCredentialsPath
-            )
 
-            loadResult = dataLoader.run()
+            loadResult = Helpers.runMainHelper(
+                tablesPath=table_keys_path,
+                csvNoFormatPath=fin_path,
+                csvFormattedPath=fout_path,
+                dbCredentialsPath=dbCredentialsPath,
+                columnMappingsPath=columns_map_path
+            )
 
             if loadResult == True:
                 messagebox.showinfo(
@@ -68,17 +77,30 @@ class Program:
 
     def deployGUI(self):
         # labels
-        tk.Label(self.master, text="Input CSV File").grid(row=0, column=0)
-        tk.Label(self.master, text="Output File Path").grid(row=1, column=0)
-        tk.Label(self.master, text="Columns Mapping JSON").grid(
+        tk.Label(self.master, text="Input CSV File").grid(
+            row=0, column=0)
+        tk.Label(self.master, text="Output File Path").grid(
+            row=1, column=0)
+        tk.Label(self.master, text="Special Column Mappings JSON").grid(
             row=2, column=0)
-        tk.Label(self.master, text="Table Keys JSON").grid(row=3, column=0)
+        tk.Label(self.master, text="Tables Schemas JSON").grid(
+            row=3, column=0)
         tk.Label(self.master, text="Database Credentials JSON").grid(
             row=4, column=0)
 
-        # buttons + entries
+        # buttons
         tk.Button(self.master, text="Select File",
-                  command=self.setInputCSVPath).grid(row=0, column=1)
+                  command=self.setInputCSVPath).grid(
+            row=0, column=1)
+        tk.Button(self.master, text="Select File",
+                  command=self.setInputColumnsMapPath).grid(
+            row=2, column=1)
+        tk.Button(self.master, text="Select File",
+                  command=self.setInputTableKeys).grid(
+            row=3, column=1)
+        tk.Button(self.master, text="Select File",
+                  command=self.setDbCredentialsPath).grid(
+            row=4, column=1)
 
         # path displays
         tk.Label(self.master, textvariable=self.inputCSVPath).grid(
@@ -105,8 +127,5 @@ class Program:
 Program(
     "Masterlist Data Loader",
     "800x450",
-    "../data/DatabaseDataOut.csv",
-    "./config/columnMappings.json",
-    "./config/tables.json",
-    "./config/dbCredentials.json"
+    "../data/DatabaseDataOut.csv"
 ).deployGUI()
