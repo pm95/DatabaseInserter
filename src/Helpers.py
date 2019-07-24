@@ -82,15 +82,30 @@ def testORM():
     connection = engine.connect()
     metadata = db.MetaData()
 
-    processes = db.Table('processes', metadata,
-                         autoload=True, autoload_with=engine)
+    processes = db.Table(
+        'processes',
+        metadata,
+        autoload=True,
+        autoload_with=engine,
+    )
 
-    # equivalent to SELECT * FROM <table name>
-    query = db.select([processes])
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchall()
+    # Queries
+    query = db.insert(processes)
+    values_list = [
+        {
+            'createdAt': '2019-07-24',
+            'processOwnerName': 'pietro malky',
+            'processNumber': '2510',
+            'updatedAt': '2019-07-24'
+        }
+    ]
+    connection.execute(query, values_list)
 
-    print(ResultSet[:3])
+    # query = db.select([processes]).where(
+    #     processes.columns["processNumber"] == '2510')
+    # resultproxy = connection.execute(query)
+    # resultset = resultproxy.fetchall()
+    # print(resultset)
 
 
 testORM()
@@ -135,7 +150,7 @@ def logIntoDatabase(credentials):
 def queryTableColNames(connection, tableName):
     query = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'%s';" % tableName
     cursor = connection.cursor().execute(query)
-    return [row[0].lower() for row in cursor]
+    return [row[0] for row in cursor]
 
 
 def queryInsert(connection, obj, tableName, tableKeys):
