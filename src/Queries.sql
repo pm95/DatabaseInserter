@@ -9,10 +9,25 @@ delete from dbo.Users;
 delete from dbo.Statuses;
 
 
+insert into dbo.Statuses (description, createdAt, updatedAt) values 
+('NEW','2019-07-25','2019-07-25'),
+('IN PROGRESS','2019-07-25','2019-07-25'),
+('COMPLETED','2019-07-25','2019-07-25'),
+('CANCELLED','2019-07-25','2019-07-25'),
+('ON HOLD','2019-07-25','2019-07-25');
+
+
+
+
+
 -- update values in Requests
 update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt=dbo.Requests.createdAt and dbo.Processes.updatedAt=dbo.Requests.updatedAt) ;
-update dbo.Requests set dbo.Requests.requestUser=(select dbo.Users.id from dbo.Users where dbo.Users.createdAt=dbo.Requests.createdAt and dbo.Users.updatedAt=dbo.Requests.updatedAt);
-update dbo.Requests set dbo.Requests.overallStatusCode=(select dbo.Statuses.statusCode from dbo.Statuses where dbo.Statuses.createdAt=dbo.Requests.createdAt and dbo.Statuses.updatedAt=dbo.Requests.updatedAt);
+update dbo.Requests set dbo.Requests.requestUser=(
+	select dbo.Users.id from dbo.Users where (
+		select 
+	)
+);
+update dbo.Requests set dbo.Requests.overallStatusCode=337;
 
 select * from dbo.Requests;
 
