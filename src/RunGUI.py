@@ -54,6 +54,8 @@ class Program:
         Helpers.queryGetTableSchema(
             self.inputTableKeys.get(), self.dbCredentialsPath.get())
         self.gotTableSchemas = True
+        messagebox.showinfo("Table Schema Success",
+                            "Imported table schema successfully!")
         print("got table schemas")
 
     def handleSubmit(self):
