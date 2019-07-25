@@ -51,9 +51,10 @@ class Program:
         print(self.dbCredentialsPath)
 
     def getTableSchemas(self):
-        if not self.getTableSchemas:
-            messagebox.showerror(
-                "ERROR", "You must first load the table schemas ")
+        Helpers.queryGetTableSchema(
+            self.inputTableKeys.get(), self.dbCredentialsPath.get())
+        print("got table schemas")
+        self.gotTableSchemas = True
 
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
@@ -131,14 +132,14 @@ class Program:
             self.master,
             text="Submit",
             command=self.handleSubmit
-        ).grid(row=5, column=0)
+        ).grid(row=5, column=1)
 
         # get table schemas button
         tk.Button(
             self.master,
             text="Get Table Schemas",
             command=self.getTableSchemas
-        ).grid(row=6, column=0)
+        ).grid(row=5, column=0)
 
         # misc legend
         tk.Label(self.master, text="* = mandatory file").grid(row=7, column=0)
