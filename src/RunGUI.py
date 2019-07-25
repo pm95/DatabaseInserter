@@ -2,6 +2,7 @@
 # Purpose: Provide GUI for Masterlist data loader
 # Date: July 22 2019
 
+import os
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
@@ -58,7 +59,6 @@ class Program:
             messagebox.showerror(
                 "NOT EVERY INPUT FILE SELECTED", "You must select all input files before continuing")
         else:
-
             loadResult = Helpers.runMainHelper(
                 tablesPath=table_keys_path,
                 csvNoFormatPath=fin_path,
@@ -70,6 +70,8 @@ class Program:
             if loadResult == True:
                 messagebox.showinfo(
                     "SUCCESS", "Data loaded successfully to the database")
+                os.remove(fout_path)
+                print("removed intermediary file successfully")
                 self.master.destroy()
             else:
                 messagebox.showerror(
@@ -127,5 +129,5 @@ class Program:
 Program(
     "Masterlist Data Loader",
     "800x450",
-    "../data/DatabaseDataOut.csv"
+    "./DatabaseDataOut.csv"
 ).deployGUI()

@@ -116,44 +116,11 @@ def queryInsertORM(tableName, csvDataPath, dbCredentialsPath):
         return exception
 
 
-def queryUpdateORM(tableName, colName, newVal, matchCol, matchVal, dbCredentialsPath):
-    engine = logIntoDatabase(dbCredentialsPath)
-    connection = engine.connect()
-    metadata = db.MetaData()
 
-    table = db.Table(
-        tableName,
-        metadata,
-        autoload=True,
-        autoload_with=engine,
-    )
-
-    query = db.update(table).where(
-        table.columns[matchCol] == matchVal).values({table.columns[colName]: newVal})
-    connection.execute(query)
-
-
-def querySelectWhereORM(tableName, colName, matchCol, matchVal, dbCredentialsPath):
-    engine = logIntoDatabase(dbCredentialsPath)
-    connection = engine.connect()
-    metadata = db.MetaData()
-
-    table = db.Table(
-        tableName,
-        metadata,
-        autoload=True,
-        autoload_with=engine,
-    )
-
-    query = db.select([table.columns[colName]]).where(
-        table.columns[matchCol] == matchVal)
-
-    return connection.execute(query).fetchall()
-
-
-# testing
 def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPath, columnMappingsPath):
     tables = list(readJson(tablesPath).keys())
+
+    result = None
     for table in tables:
         print("Loading data for %s table" % table)
         formatCSVForLoad(
@@ -163,27 +130,64 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
             contains_dates=True
         )
 
-        print("Insert query status: %s\n\n" % queryInsertORM(
+        result = queryInsertORM(
             tableName=table,
             csvDataPath=csvFormattedPath,
             dbCredentialsPath=dbCredentialsPath,
-        ))
-    return True
+        )
 
-# statusCodes = [x[0] for x in querySelectWhereORM(
-#     "statuses",
-#     "statusCode",
-#     "updatedAt",
-#     "2019-05-21",
-#     "./config/dbCredentials.json"
-# )]
+        print("Insert query status: %s\n\n" % result)
 
-# for x in statusCodes:
-#     queryUpdateORM(
-#         tableName="requests",
-#         colName="overallStatusCode",
-#         newVal=x,
-#         matchCol="overallStatusCode",
-#         matchVal=None,
-#         dbCredentialsPath='./config/dbCredentials.json'
+    return result
+
+# # testing
+# def queryUpdateORM(tableName, colName, newVal, matchCol, matchVal, dbCredentialsPath):
+#     engine = logIntoDatabase(dbCredentialsPath)
+#     connection = engine.connect()
+#     metadata = db.MetaData()
+
+#     table = db.Table(
+#         tableName,
+#         metadata,
+#         autoload=True,
+#         autoload_with=engine,
 #     )
+
+#     query = db.update(table).where(
+#         table.columns[matchCol] == matchVal).values({table.columns[colName]: newVal})
+#     connection.execute(query)
+
+
+# def querySelectWhereORM(tableName, colName, matchCol, matchVal, dbCredentialsPath):
+#     engine = logIntoDatabase(dbCredentialsPath)
+#     connection = engine.connect()
+#     metadata = db.MetaData()
+
+#     table = db.Table(
+#         tableName,
+#         metadata,
+#         autoload=True,
+#         autoload_with=engine,
+#     )
+
+#     query = db.select([table.columns[colName]]).where(
+#         table.columns[matchCol] == matchVal)
+
+#     return connection.execute(query).fetchall()
+
+# def queryGetTableSchema(tablesJsonPath, dbCredentialsPath):
+#     tables = readJson(tablesJsonPath)
+#     engine = logIntoDatabase(dbCredentialsPath)
+#     connection = engine.connect()
+#     metadata = db.MetaData()
+
+#     test = {}
+
+#     for tableName in tables:
+#         table = db.Table(
+#             tableName,
+#             metadata,
+#             autoload=True,
+#             autoload_with=engine)
+
+#         print(list(table.columns))
