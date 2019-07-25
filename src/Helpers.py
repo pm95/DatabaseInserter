@@ -32,7 +32,7 @@ def writeJson(obj, jsonPath):
 # Data prep
 def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=False):
     with open(fin_path, 'r') as fin, open(fout_path, 'w', newline='\n') as fout:
-        # Read in the CSV file
+            # Read in the CSV file
         fin = csv.reader(fin, delimiter=',')
 
         # Call writable object to write CSV
@@ -61,9 +61,16 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
 
         # Work on rest of data in CSV
         for row in fin:
-            if contains_dates:
-                for index in date_cols:
-                    row[index] = row[index].replace("T00:00:00.00Z", "")
+            # if contains_dates:
+            #     for index in date_cols:
+            #         row[index] = row[index].replace("T00:00:00.00Z", "")
+
+            for i in range(len(row)):
+                if row[i] == 'Yes' or row[i] == 'yes':
+                    row[i] = True
+                elif row[i] == 'No' or row[i] == 'no':
+                    row[i] = False
+
             fout.writerow(row)
 
 

@@ -1,17 +1,19 @@
-select * from dbo.Processes where processnumber = 2510 or processnumber = 3408;
+select * from dbo.Processes;
 select * from dbo.Requests;
-select * from dbo.Users where userId is null;
-select * from dbo.Statuses where updatedAt = '2019-05-21';
+select * from dbo.Users;
+select * from dbo.Statuses;
 
-delete from dbo.Processes where processnumber = 2510 or processnumber = 3408;
-delete from dbo.Requests where requestUser is null;
-delete from dbo.Users where userId is null;
-delete from dbo.Statuses where updatedAt = '2019-05-21';
+delete from dbo.Processes;
+delete from dbo.Requests;
+delete from dbo.Users;
+delete from dbo.Statuses;
 
 
 -- update values in Requests
-declare @flaggedDate datetimeoffset(7) = '2018-06-15';
-update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
-update dbo.Requests set dbo.Requests.requestUser=(select dbo.Users.id from dbo.Users where dbo.Users.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
-update dbo.Requests set dbo.Requests.overallStatusCode=(select dbo.Statuses.statusCode from dbo.Statuses where dbo.Statuses.createdAt=@flaggedDate) where dbo.Requests.createdAt=@flaggedDate;
+update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt=dbo.Requests.createdAt and dbo.Processes.updatedAt=dbo.Requests.updatedAt) ;
+update dbo.Requests set dbo.Requests.requestUser=(select dbo.Users.id from dbo.Users where dbo.Users.createdAt=dbo.Requests.createdAt and dbo.Users.updatedAt=dbo.Requests.updatedAt);
+update dbo.Requests set dbo.Requests.overallStatusCode=(select dbo.Statuses.statusCode from dbo.Statuses where dbo.Statuses.createdAt=dbo.Requests.createdAt and dbo.Statuses.updatedAt=dbo.Requests.updatedAt);
+
 select * from dbo.Requests;
+
+-- =CONCAT("2019-07-25T",TEXT(RANDBETWEEN(0,23),"00"),":",TEXT(RANDBETWEEN(0,59),"00"),":00.00Z")
