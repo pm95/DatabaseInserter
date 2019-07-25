@@ -78,7 +78,7 @@ class Program:
                 columnMappingsPath=columns_map_path
             )
 
-            if loadResult == True:
+            if all(loadResult) == True:
                 messagebox.showinfo(
                     "SUCCESS", "Data loaded successfully to the database")
                 os.remove(fout_path)
@@ -86,7 +86,7 @@ class Program:
                 self.master.destroy()
             else:
                 messagebox.showerror(
-                    "ERROR", loadResult)
+                    "ERROR", '\n'.join(loadResult))
 
     def deployGUI(self):
         # labels
