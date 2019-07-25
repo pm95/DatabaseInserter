@@ -174,19 +174,19 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
 
 #     return connection.execute(query).fetchall()
 
-# def queryGetTableSchema(tablesJsonPath, dbCredentialsPath):
-#     tables = readJson(tablesJsonPath)
-#     engine = logIntoDatabase(dbCredentialsPath)
-#     connection = engine.connect()
-#     metadata = db.MetaData()
+def queryGetTableSchema(tablesJsonPath, dbCredentialsPath):
+    tables = readJson(tablesJsonPath)
+    engine = logIntoDatabase(dbCredentialsPath)
+    connection = engine.connect()
+    metadata = db.MetaData()
 
-#     test = {}
+    for tableName in tables:
+        table = db.Table(
+            tableName,
+            metadata,
+            autoload=True,
+            autoload_with=engine)
 
-#     for tableName in tables:
-#         table = db.Table(
-#             tableName,
-#             metadata,
-#             autoload=True,
-#             autoload_with=engine)
+        tables[tableName] = table.columns.keys()
 
-#         print(list(table.columns))
+    writeJson(tables, tablesJsonPath)

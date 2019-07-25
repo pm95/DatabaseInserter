@@ -32,6 +32,8 @@ class Program:
         self.outputCSVPath = tk.StringVar(
             master=self.master, value=defaultOutputPath)
 
+        self.gotTableSchemas = False
+
     def setInputCSVPath(self):
         self.inputCSVPath.set(askopenfilename())
         print(self.inputCSVPath)
@@ -48,6 +50,11 @@ class Program:
         self.dbCredentialsPath.set(askopenfilename())
         print(self.dbCredentialsPath)
 
+    def getTableSchemas(self):
+        if not self.getTableSchemas:
+            messagebox.showerror(
+                "ERROR", "You must first load the table schemas ")
+
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
         columns_map_path = self.inputColumnsMapsPath.get()
@@ -55,9 +62,12 @@ class Program:
         fout_path = self.outputCSVPath.get()
         dbCredentialsPath = self.dbCredentialsPath.get()
 
-        if fin_path == "No file selected" or columns_map_path == "No file selected" or table_keys_path == "No file selected" or dbCredentialsPath == "No file selected":
+        if fin_path == "No file selected" or table_keys_path == "No file selected" or dbCredentialsPath == "No file selected":
             messagebox.showerror(
                 "NOT EVERY INPUT FILE SELECTED", "You must select all input files before continuing")
+        elif not self.gotTableSchemas:
+            messagebox.showerror(
+                "ERROR", "You MUST first load the table schemas and specify special column mappings (optional)")
         else:
             loadResult = Helpers.runMainHelper(
                 tablesPath=table_keys_path,
@@ -79,15 +89,15 @@ class Program:
 
     def deployGUI(self):
         # labels
-        tk.Label(self.master, text="Input CSV File").grid(
+        tk.Label(self.master, text="* Input CSV File").grid(
             row=0, column=0)
         tk.Label(self.master, text="Output File Path").grid(
             row=1, column=0)
         tk.Label(self.master, text="Special Column Mappings JSON").grid(
             row=2, column=0)
-        tk.Label(self.master, text="Tables Schemas JSON").grid(
+        tk.Label(self.master, text="* Tables Schemas JSON").grid(
             row=3, column=0)
-        tk.Label(self.master, text="Database Credentials JSON").grid(
+        tk.Label(self.master, text="* Database Credentials JSON").grid(
             row=4, column=0)
 
         # buttons
@@ -122,6 +132,16 @@ class Program:
             text="Submit",
             command=self.handleSubmit
         ).grid(row=5, column=0)
+
+        # get table schemas button
+        tk.Button(
+            self.master,
+            text="Get Table Schemas",
+            command=self.getTableSchemas
+        ).grid(row=6, column=0)
+
+        # misc legend
+        tk.Label(self.master, text="* = mandatory file").grid(row=7, column=0)
 
         self.master.mainloop()
 
