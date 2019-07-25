@@ -75,7 +75,7 @@ def readCSVDictList(fin_path):
 # ORM-based functions
 def logIntoDatabase(dbLoginCredsPath):
     # dialect+driver://username:password@host:port/db?driver=SQL+Server
-    dbLoginCreds = readJson("./config/dbCredentials.json")
+    dbLoginCreds = readJson(dbLoginCredsPath)
 
     connectionString = 'mssql+pyodbc://%s:%s@%s/%s?driver=SQL+Server' % (
         dbLoginCreds['UID'],
@@ -114,7 +114,6 @@ def queryInsertORM(tableName, csvDataPath, dbCredentialsPath):
         exception = traceback.format_exc()
         print(exception)
         return exception
-
 
 
 def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPath, columnMappingsPath):
