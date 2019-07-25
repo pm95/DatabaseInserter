@@ -53,8 +53,8 @@ class Program:
     def getTableSchemas(self):
         Helpers.queryGetTableSchema(
             self.inputTableKeys.get(), self.dbCredentialsPath.get())
-        print("got table schemas")
         self.gotTableSchemas = True
+        print("got table schemas")
 
     def handleSubmit(self):
         fin_path = self.inputCSVPath.get()
@@ -122,8 +122,13 @@ class Program:
             row=1, column=2)
         tk.Label(self.master, textvariable=self.inputColumnsMapsPath).grid(
             row=2, column=2)
+        tk.Button(
+            self.master,
+            text="Query Table Schemas",
+            command=self.getTableSchemas
+        ).grid(row=3, column=2)
         tk.Label(self.master, textvariable=self.inputTableKeys).grid(
-            row=3, column=2)
+            row=3, column=3)
         tk.Label(self.master, textvariable=self.dbCredentialsPath).grid(
             row=4, column=2)
 
@@ -132,13 +137,6 @@ class Program:
             self.master,
             text="Submit",
             command=self.handleSubmit
-        ).grid(row=5, column=1)
-
-        # get table schemas button
-        tk.Button(
-            self.master,
-            text="Get Table Schemas",
-            command=self.getTableSchemas
         ).grid(row=5, column=0)
 
         # misc legend
