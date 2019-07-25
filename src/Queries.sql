@@ -21,13 +21,11 @@ insert into dbo.Statuses (description, createdAt, updatedAt) values
 
 
 -- update values in Requests
-update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.createdAt=dbo.Requests.createdAt and dbo.Processes.updatedAt=dbo.Requests.updatedAt) ;
+update dbo.Requests set dbo.Requests.processId=(select dbo.Processes.processId from dbo.Processes where dbo.Processes.processId=dbo.Requests.id) ;
 update dbo.Requests set dbo.Requests.requestUser=(
-	select dbo.Users.id from dbo.Users where (
-		select 
-	)
+	select dbo.Users.id from dbo.Users where dbo.Users.updatedAt = dbo.Requests.updatedAt
 );
-update dbo.Requests set dbo.Requests.overallStatusCode=337;
+update dbo.Requests set dbo.Requests.overallStatusCode=342;
 
 select * from dbo.Requests;
 
