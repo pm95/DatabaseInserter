@@ -42,9 +42,9 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
         col_names = next(fin)
 
         # Extract the indeces for all columns containing "date" information
-        if contains_dates:
-            date_cols = [index for (index, col) in enumerate(
-                col_names) if "Date" in col or "date" in col]
+        # if contains_dates:
+        #     date_cols = [index for (index, col) in enumerate(
+        #         col_names) if "Date" in col or "date" in col]
 
         # Mofidy headers to make import into DB easier
         if columnMappings:
