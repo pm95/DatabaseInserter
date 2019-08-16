@@ -85,7 +85,7 @@ class Program:
                     "SUCCESS", "Data loaded successfully to the database")
                 # os.remove(fout_path)
                 # print("removed intermediary file successfully")
-                self.master.destroy()
+                # self.master.destroy()
             else:
                 messagebox.showerror(
                     "ERROR", '\n'.join(loadResult))

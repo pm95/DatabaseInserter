@@ -42,15 +42,14 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None):
         col_names = next(fin)
 
         # Mofidy headers to make import into DB easier
-        if columnMappings:
-            for i in range(len(col_names)):
-                col = col_names[i]
-                if col.lower() in columnMappings:
-                    col = columnMappings[col.lower()]
-                else:
-                    col = col.replace(" ", "")
-                    col = col[0].lower() + col[1:]
-                col_names[i] = col
+        for i in range(len(col_names)):
+            col = col_names[i]
+            if col.lower() in columnMappings:
+                col = columnMappings[col.lower()]
+            else:
+                col = col.replace(" ", "")
+                col = col[0].lower() + col[1:]
+            col_names[i] = col
 
         fout.writerow(col_names)
 
@@ -132,7 +131,7 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
             dbCredentialsPath=dbCredentialsPath,
         )
 
-        # currResult = True
+        currResult = True
 
         result.append(currResult)
 
