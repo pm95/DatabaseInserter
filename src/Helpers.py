@@ -44,8 +44,9 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None):
         # Mofidy headers to make import into DB easier
         for i in range(len(col_names)):
             col = col_names[i]
-            if col.lower() in columnMappings:
-                col = columnMappings[col.lower()]
+            if columnMappings:
+                if col.lower() in columnMappings:
+                    col = columnMappings[col.lower()]
             else:
                 col = col.replace(" ", "")
                 col = col[0].lower() + col[1:]
@@ -60,6 +61,9 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None):
                     row[i] = True
                 elif row[i] == 'No' or row[i] == 'no':
                     row[i] = False
+
+                if row[i] == 'NULL':
+                    row[i] = ''
 
             fout.writerow(row)
 
@@ -119,15 +123,17 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
     result = []
     for table in tables:
         print("Loading data for %s table" % table)
-        formatCSVForLoad(
-            csvNoFormatPath,
-            csvFormattedPath,
-            columnMappings=readJson(columnMappingsPath)[table]
-        )
+        # formatCSVForLoad(
+        #     csvNoFormatPath,
+        #     csvFormattedPath,
+        #     columnMappings=readJson(columnMappingsPath)[table]
+        # )
+
+        print(csvNoFormatPath)
 
         currResult = queryInsertORM(
             tableName=table,
-            csvDataPath=csvFormattedPath,
+            csvDataPath=csvNoFormatPath,
             dbCredentialsPath=dbCredentialsPath,
         )
 
@@ -182,30 +188,3 @@ def getUniqueValues(csvDataPath, uniqueCol, colsToRead=None, writeOutPath=None):
             for row in uniqueRows:
                 fout.writerow(row)
     print(len(data_in), len(uniqueRows))
-
-
-def test():
-    cols = ["Requester", "Date Created", "Last Updated", ]
-    uniqueCol = "Requester"
-    getUniqueValues(
-        csvDataPath="C:/Users/pum001f/Desktop/DataloaderInfo/BulkData.csv",
-        uniqueCol=uniqueCol,
-        colsToRead=cols,
-        writeOutPath="C:/Users/pum001f/Desktop/testchump.csv"
-    )
-
-    csvIn = readCSVDictList("C:/Users/pum001f/Desktop/BulkData.csv")
-    refVector = readCSVDictList("C:/Users/pum001f/Desktop/testchump.csv")
-
-    fieldnames = csvIn[0].keys()
-
-    modifyCol = "Last Updated"
-    vlookupCol = "Requester"
-
-    for i in range(len(csvIn)):
-        row = csvIn[i]
-        for ref in refVector:
-            if row[vlookupCol] == ref[vlookupCol]:
-                row[modifyCol] = ref[modifyCol]
-                break
-        csvIn[i] = row
