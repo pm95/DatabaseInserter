@@ -30,7 +30,7 @@ def writeJson(obj, jsonPath):
 
 
 # Data prep
-def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=False):
+def formatCSVForLoad(fin_path, fout_path, columnMappings=None):
     with open(fin_path, 'r') as fin, open(fout_path, 'w', newline='\n') as fout:
             # Read in the CSV file
         fin = csv.reader(fin, delimiter=',')
@@ -40,11 +40,6 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
 
         # Extract first row in CSV (headers)
         col_names = next(fin)
-
-        # Extract the indeces for all columns containing "date" information
-        # if contains_dates:
-        #     date_cols = [index for (index, col) in enumerate(
-        #         col_names) if "Date" in col or "date" in col]
 
         # Mofidy headers to make import into DB easier
         if columnMappings:
@@ -61,10 +56,6 @@ def formatCSVForLoad(fin_path, fout_path, columnMappings=None, contains_dates=Fa
 
         # Work on rest of data in CSV
         for row in fin:
-            # if contains_dates:
-            #     for index in date_cols:
-            #         row[index] = row[index].replace("T00:00:00.00Z", "")
-
             for i in range(len(row)):
                 if row[i] == 'Yes' or row[i] == 'yes':
                     row[i] = True
@@ -132,8 +123,7 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
         formatCSVForLoad(
             csvNoFormatPath,
             csvFormattedPath,
-            columnMappings=readJson(columnMappingsPath)[table],
-            contains_dates=True
+            columnMappings=readJson(columnMappingsPath)[table]
         )
 
         currResult = queryInsertORM(
@@ -141,6 +131,8 @@ def runMainHelper(tablesPath, csvNoFormatPath, csvFormattedPath, dbCredentialsPa
             csvDataPath=csvFormattedPath,
             dbCredentialsPath=dbCredentialsPath,
         )
+
+        # currResult = True
 
         result.append(currResult)
 
@@ -165,3 +157,56 @@ def queryGetTableSchema(tablesJsonPath, dbCredentialsPath):
         tables[tableName] = table.columns.keys()
 
     writeJson(tables, tablesJsonPath)
+
+
+def getUniqueValues(csvDataPath, uniqueCol, colsToRead=None, writeOutPath=None):
+    data_in = readCSVDictList(csvDataPath)
+    uniqueRows = []
+    uniqueKeys = []
+    for row in data_in:
+        if colsToRead:
+            row = {key: row[key] for key in row if key in colsToRead}
+        if row[uniqueCol] not in uniqueKeys:
+            uniqueKeys.append(row[uniqueCol])
+            uniqueRows.append(row)
+
+    if colsToRead:
+        fieldnames = colsToRead
+    else:
+        fieldnames = data_in[0].keys()
+
+    if writeOutPath:
+        with open(writeOutPath, 'w', newline='\n') as fout:
+            fout = csv.DictWriter(
+                fout, fieldnames=fieldnames, delimiter=',')
+            fout.writeheader()
+            for row in uniqueRows:
+                fout.writerow(row)
+    print(len(data_in), len(uniqueRows))
+
+
+def test():
+    cols = ["Requester", "Date Created", "Last Updated", ]
+    uniqueCol = "Requester"
+    getUniqueValues(
+        csvDataPath="C:/Users/pum001f/Desktop/DataloaderInfo/BulkData.csv",
+        uniqueCol=uniqueCol,
+        colsToRead=cols,
+        writeOutPath="C:/Users/pum001f/Desktop/testchump.csv"
+    )
+
+    csvIn = readCSVDictList("C:/Users/pum001f/Desktop/BulkData.csv")
+    refVector = readCSVDictList("C:/Users/pum001f/Desktop/testchump.csv")
+
+    fieldnames = csvIn[0].keys()
+
+    modifyCol = "Last Updated"
+    vlookupCol = "Requester"
+
+    for i in range(len(csvIn)):
+        row = csvIn[i]
+        for ref in refVector:
+            if row[vlookupCol] == ref[vlookupCol]:
+                row[modifyCol] = ref[modifyCol]
+                break
+        csvIn[i] = row

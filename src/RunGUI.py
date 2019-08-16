@@ -83,8 +83,8 @@ class Program:
             if all(loadResult) == True:
                 messagebox.showinfo(
                     "SUCCESS", "Data loaded successfully to the database")
-                os.remove(fout_path)
-                print("removed intermediary file successfully")
+                # os.remove(fout_path)
+                # print("removed intermediary file successfully")
                 self.master.destroy()
             else:
                 messagebox.showerror(
